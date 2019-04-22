@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace CommandBus\Query;
 
 use App\Event\EventDispatcherInterface;
+use App\ViewModel\ProductDetailsView;
 use Event\Event\ProductDetailsReadEvent;
-use Model\Product;
 use Repository\ProductRepositoryInterface;
 
 final class GetProductQuery extends AbstractProductQuery
@@ -41,14 +41,20 @@ final class GetProductQuery extends AbstractProductQuery
     }
 
     /**
-     * @return Product|null
+     * @return ProductDetailsView|null
      */
-    public function execute(): ?Product
+    public function execute(): ?ProductDetailsView
     {
         $product = $this->productRepository->find($this->productId);
 
         $this->eventDispatcher->handleEvent(new ProductDetailsReadEvent($product));
 
-        return $product;
+        return $product ? new ProductDetailsView(
+            $product->getId(),
+            $product->getTitle(),
+            $product->getDescription(),
+            $product->getSku(),
+            $product->getViewsCounter()
+        ) : null;
     }
 }

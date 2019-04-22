@@ -15,6 +15,8 @@ class ProductController extends AbstractController
 
         $products = $query->execute();
 
+        // @TODO serialization
+
         return $products;
     }
 
@@ -25,6 +27,8 @@ class ProductController extends AbstractController
         $query->setProductId($productId);
 
         $product = $query->execute();
+
+        // @TODO serialization
 
         return $product;
     }
