@@ -82,6 +82,9 @@ class Container
         $this->queryRegistry->setEventDispatcher($this->eventDispatcher);
         $this->queryRegistry->setRepositoryRegistry($this->repositoryRegistry);
         $this->queryRegistry->setup();
+
+        // build controllers
+        // TODO setup action classes and inject required dependencies
     }
 
     /**
