@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace App\DependencyInjection;
 
-use DataStorage\ElasticStorage;
-use DataStorage\MysqlStorage;
+use Infrastructure\DataStorage\ElasticStorage;
+use Infrastructure\DataStorage\MysqlStorage;
+use Infrastructure\Repository\ElasticProductRepository;
+use Infrastructure\Repository\MysqlProductRepository;
 use Model\Product;
-use Repository\ProductRepository;
-use Repository\ProductRepositoryProxy;
 use Repository\RepositoryInterface;
 
 class RepositoryRegistry
@@ -45,11 +45,13 @@ class RepositoryRegistry
     {
         // build repositories
         $this->repositories = [];
-        $this->repositories[Product::class] = new ProductRepositoryProxy(
-            new ProductRepository(
+        $this->repositories[Product::class] = new ElasticProductRepository(
+            new ElasticStorage(),
+            new MysqlProductRepository(
                 new MysqlStorage()
+                // add next possible repository to the chain
+                // new PostgresqlProductRepository(...)
             ),
-            new ElasticStorage()
         );
     }
 

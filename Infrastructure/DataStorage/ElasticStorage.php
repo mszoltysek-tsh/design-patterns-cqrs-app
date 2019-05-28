@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace DataStorage;
+namespace Infrastructure\DataStorage;
 
 class ElasticStorage implements DataStorageInterface
 {

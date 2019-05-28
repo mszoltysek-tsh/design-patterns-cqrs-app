@@ -14,4 +14,9 @@ interface RepositoryInterface
      * @param int $id
      */
     public function find(int $id);
+
+    /**
+     * @return array
+     */
+    public function getAllProductIds(): array;
 }

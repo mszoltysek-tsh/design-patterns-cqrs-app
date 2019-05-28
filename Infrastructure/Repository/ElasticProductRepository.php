@@ -1,34 +1,33 @@
 <?php
 declare(strict_types=1);
 
-namespace Repository;
+namespace Infrastructure\Repository;
 
 
-use DataStorage\DataStorageInterface;
+use Infrastructure\DataStorage\DataStorageInterface;
 use Model\Product;
+use Repository\ProductRepositoryInterface;
+use Repository\RepositoryInterface;
 
-class ProductRepositoryProxy implements ProductRepositoryInterface
+class ElasticProductRepository implements ProductRepositoryInterface
 {
-    /**
-     * @var ProductRepository
-     */
-    private $productRepository;
+    use ChainedProductRepositoryTrait;
 
     /**
      * @var DataStorageInterface
      */
-    private $cacheStorage;
+    private $storage;
 
     /**
-     * ProductRepositoryProxy constructor.
+     * ElasticProductRepository constructor.
      *
-     * @param ProductRepository    $productRepository
-     * @param DataStorageInterface $cacheStorage
+     * @param DataStorageInterface     $storage
+     * @param null|RepositoryInterface $nextRepository
      */
-    public function __construct(ProductRepository $productRepository, DataStorageInterface $cacheStorage)
+    public function __construct(DataStorageInterface $storage, ?RepositoryInterface $nextRepository = null)
     {
-        $this->productRepository = $productRepository;
-        $this->cacheStorage      = $cacheStorage;
+        $this->storage = $storage;
+        $this->nextRepository = $nextRepository;
     }
 
     /**
@@ -36,7 +35,7 @@ class ProductRepositoryProxy implements ProductRepositoryInterface
      */
     public function findAll(): array
     {
-        $ids = $this->productRepository->getAllProductIds();
+        $ids = $this->getAllProductIds();
         $products = [];
 
         // get ids from real repo and one by one check cache and add cache if necessary
@@ -60,7 +59,7 @@ class ProductRepositoryProxy implements ProductRepositoryInterface
      */
     public function increaseViewCount(Product $product): void
     {
-        $this->productRepository->increaseViewCount($product);
+        $this->nextRepository->increaseViewCount($product);
     }
 
     /**
@@ -70,7 +69,7 @@ class ProductRepositoryProxy implements ProductRepositoryInterface
      */
     private function getCachedProduct(int $id): ?Product
     {
-        $data = $this->cacheStorage->executeQuery("...");
+        $data = $this->storage->executeQuery("...");
 
         // ..
 
@@ -88,7 +87,7 @@ class ProductRepositoryProxy implements ProductRepositoryInterface
         if ($cached instanceof Product && $this->isCacheValid($id)) {
             $product = $cached;
         } else {
-            $product = $this->productRepository->find($id);
+            $product = $this->nextRepository->find($id);
             $this->cacheProduct($product);
         }
 
@@ -103,7 +102,7 @@ class ProductRepositoryProxy implements ProductRepositoryInterface
     private function isCacheValid($id): bool
     {
         // check when product was cached
-        $this->cacheStorage->executeQuery("...");
+        $this->storage->executeQuery("...");
         return true;
     }
 
@@ -113,6 +112,15 @@ class ProductRepositoryProxy implements ProductRepositoryInterface
     private function cacheProduct(Product $product): void
     {
         // index product in cache repository
-        $this->cacheStorage->executeQuery("...");
+        $this->storage->executeQuery("...");
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllProductIds(): array
+    {
+        // forward to next repo
+        return $this->nextRepository->getAllProductIds();
     }
 }
